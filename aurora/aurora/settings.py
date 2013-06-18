@@ -1,23 +1,47 @@
 # Django settings for aurora project.
+import os
+import ConfigParser
 
-DEBUG = True
+SITE_ROOT = "/".join(os.path.dirname(os.path.realpath(__file__)).split("/")[:-1])
+
+# *************************************
+# LOAD CONFIG FILE
+# *************************************
+Config = ConfigParser.ConfigParser()
+Config.read(SITE_ROOT + "/v2/config.cnf")
+
+SERVER = Config.get('main', 'SERVER')
+DOMAIN = Config.get('main', 'DOMAIN')
+TEMPLATE_WEBSITE = Config.get('templates', 'TEMPLATE_WEBSITE')
+DEBUG = Config.getboolean('main', 'DEBUG')
 TEMPLATE_DEBUG = DEBUG
 
 ADMINS = (
-    # ('Your Name', 'your_email@example.com'),
+    ('Zhett', 'stratos33290@gmail.com'),
 )
 
 MANAGERS = ADMINS
 
+BDD_NAME = Config.get('database', 'BDD_NAME')
+BDD_USER = Config.get('database', 'BDD_USER')
+BDD_PASSWORD = Config.get('database', 'BDD_PWD')
+BDD_HOST = Config.get('database', 'BDD_HOST')
+BDD_PORT = Config.get('database', 'BDD_PORT')
+
+# *************************************
+# DATABASES
+# *************************************
 DATABASES = {
     'default': {
-        'ENGINE': 'django.db.backends.', # Add 'postgresql_psycopg2', 'mysql', 'sqlite3' or 'oracle'.
-        'NAME': '',                      # Or path to database file if using sqlite3.
-        'USER': '',                      # Not used with sqlite3.
-        'PASSWORD': '',                  # Not used with sqlite3.
-        'HOST': '',                      # Set to empty string for localhost. Not used with sqlite3.
-        'PORT': '',                      # Set to empty string for default. Not used with sqlite3.
-    }
+        'ENGINE': 'django.db.backends.mysql',
+        'NAME': BDD_NAME,
+        'USER': BDD_USER,
+        'PASSWORD': BDD_PASSWORD,
+        'HOST': BDD_HOST,
+        'PORT': BDD_PORT,
+        'STORAGE_ENGINE': 'InnoDB',
+        'OPTIONS': {'init_command': 'SET character_set_connection=utf8, collation_connection=utf8_unicode_ci'}
+    },
 }
 
 # Local time zone for this installation. Choices can be found here:
@@ -27,11 +51,11 @@ DATABASES = {
 # timezone as the operating system.
 # If running in a Windows environment this must be set to the same as your
 # system time zone.
-TIME_ZONE = 'America/Chicago'
+TIME_ZONE = 'Europe/Paris'
 
 # Language code for this installation. All choices can be found here:
 # http://www.i18nguy.com/unicode/language-identifiers.html
-LANGUAGE_CODE = 'en-us'
+LANGUAGE_CODE = 'fr-FR'
 
 SITE_ID = 1
 
@@ -48,7 +72,7 @@ USE_TZ = True
 
 # Absolute filesystem path to the directory that will hold user-uploaded files.
 # Example: "/home/media/media.lawrence.com/media/"
-MEDIA_ROOT = ''
+MEDIA_ROOT = os.path.join(SITE_ROOT, 'medias/')
 
 # URL that handles the media served from MEDIA_ROOT. Make sure to use a
 # trailing slash.
@@ -63,10 +87,11 @@ STATIC_ROOT = ''
 
 # URL prefix for static files.
 # Example: "http://media.lawrence.com/static/"
-STATIC_URL = '/static/'
+STATIC_URL = '/medias/'
 
 # Additional locations of static files
 STATICFILES_DIRS = (
+    os.path.join(SITE_ROOT, 'medias'),
     # Put strings here, like "/home/html/static" or "C:/www/django/static".
     # Always use forward slashes, even on Windows.
     # Don't forget to use absolute paths, not relative paths.
@@ -109,6 +134,7 @@ TEMPLATE_DIRS = (
     # Put strings here, like "/home/html/django_templates" or "C:/www/django/templates".
     # Always use forward slashes, even on Windows.
     # Don't forget to use absolute paths, not relative paths.
+    os.path.join(SITE_ROOT, 'website/templates/'+TEMPLATE_WEBSITE),
 )
 
 INSTALLED_APPS = (
@@ -118,12 +144,13 @@ INSTALLED_APPS = (
     'django.contrib.sites',
     'django.contrib.messages',
     'django.contrib.staticfiles',
-    # Uncomment the next line to enable the admin:
-    # 'django.contrib.admin',
+    'django.contrib.admin',
+    'website',
+    #'south',
     # Uncomment the next line to enable admin documentation:
     # 'django.contrib.admindocs',
 )
-
+INTERNAL_IPS = ('127.0.0.1',)
 # A sample logging configuration. The only tangible logging
 # performed by this configuration is to send an email to
 # the site admins on every HTTP 500 error when DEBUG=False.
@@ -131,24 +158,29 @@ INSTALLED_APPS = (
 # more details on how to customize your logging configuration.
 LOGGING = {
     'version': 1,
-    'disable_existing_loggers': False,
-    'filters': {
-        'require_debug_false': {
-            '()': 'django.utils.log.RequireDebugFalse'
-        }
+    'disable_existing_loggers': True,
+    'formatters': {
+        'verbose': {
+            'format': '%(asctime)s - %(levelname)s | %(filename)s - %(funcName)s() - Line %(lineno)s | %(message)s'
+        },
+        'simple': {
+            'format': '%(levelname)s %(message)s'
+        },
     },
     'handlers': {
-        'mail_admins': {
-            'level': 'ERROR',
-            'filters': ['require_debug_false'],
-            'class': 'django.utils.log.AdminEmailHandler'
-        }
+        'file': {
+            'level': 'DEBUG',
+            'class': 'logging.FileHandler',
+            'formatter': 'verbose',
+            'filename': SITE_ROOT + "/logs/cprodirect.log",
+        },
     },
     'loggers': {
-        'django.request': {
-            'handlers': ['mail_admins'],
-            'level': 'ERROR',
+        'logview.userlogins': {
+            'handlers': ['file'],
+            'level': 'INFO',
             'propagate': True,
         },
     }
 }
+SESSION_EXPIRE_AT_BROWSER_CLOSE = True

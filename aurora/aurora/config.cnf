@@ -1,0 +1,15 @@
+[database]
+BDD_NAME=aurora
+BDD_USER=root
+BDD_PWD=root
+BDD_HOST=localhost
+BDD_PORT=3307
+
+[main]
+# SERVER CAN BE : TEST, DEMO, PROD
+SERVER=TEST
+DOMAIN=aurora.fr
+DEBUG=True
+
+[templates]
+TEMPLATE_WEBSITE=v0
